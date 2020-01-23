@@ -1,22 +1,22 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Fri Nov 22 20:52:04 2019
-
-@author: jakisanm
-"""
+''' This script pulls in data on crimes(homicides) in Chicago, IL from Google Big Query,
+    transforms the data, makes predictions for the coming year and finally
+    pushes the results into an Oracle Database. EDA and Predictions are published
+    and frequently updated on a Power BI Dashboard'''
 
 
-#Predicting a crime could save a life – Advantage back to Chicago PD
-#Author - James Akisanmi
+__author__ = "James Akisanmi"
+__email__ = "jamesakisanmi@gmail.com"
+__title__ = "Predicting a crime could save a life – Advantage back to Chicago PD"
+__link__ = "https://app.powerbi.com/view?r=eyJrIjoiOWM2MDdjNGEtMGJjOS00YmQwLWI0ZjEtYmZkNzFjYWNhZGU0IiwidCI6IjgyYzUxNGMxLWE3MTctNDA4Ny1iZTA2LWQ0MGQyMDcwYWQ1MiIsImMiOjEwfQ%3D%3D"
+__version__ = "Python 3.7"
 
 import cx_Oracle
 import smtplib
 import inspect
 import dateutil.parser as parser
-from sklearn.preprocessing import OneHotEncoder, StandardScaler
 from sklearn.ensemble import RandomForestRegressor
-from sklearn.model_selection import train_test_split, cross_val_score, GridSearchCV, RandomizedSearchCV
-from sklearn.metrics import mean_squared_error, mean_absolute_error
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import mean_absolute_error
 from google.cloud import bigquery, storage
 from google.auth import compute_engine
 import collections
@@ -63,11 +63,9 @@ class Chicago_Homicides_DC():
 
     @staticmethod
     def sendErrorEmail(sender, receiver, body):
-        # Connect to the server    #### Does not work I need to fix this
         server = smtplib.SMTP("smtp.gmail.com:587")
         server.ehlo()
         server.starttls()
-        #Need to create python account for error handling
         server.login("xxxxxx", "xxxxx")
         for recipient in receiver:
             server.sendmail(sender, recipient, body)  # Send the email
@@ -101,7 +99,6 @@ class Chicago_Homicides_DC():
         Chicago_Homicides_DC.writeError(exception, errorHeader)
         Chicago_Homicides_DC.sendEmailError(repr(exception), curTime, fromDef)
 
-        #Need to modify, personalize and make better####
     def run_query(self, query):
 
         try:
@@ -292,14 +289,13 @@ class Chicago_Homicides_Integration():
     def monthlyPredictionUpdates(self, Prediction):
         
         try:            
-            ####Need to automate to include month number***
             crimesPrediction = Prediction.values.tolist()
             truncatesStatement = """delete from CHICAGO_PREDICTION"""
             monthlyUpdateStatement = """ insert into CHICAGO_PREDICTION(CRIMES, AVAILABLE_MONTHS, YEAR)
                                     VALUES (:1, :2, :3) """
              
             self.RDScur.execute(truncatesStatement)    
-            self.RDScur.executemany(monthlyUpdateStatement, crimesPrediction)    ###Need to change to self.crimesCount or ...
+            self.RDScur.executemany(monthlyUpdateStatement, crimesPrediction)
             
             self.RDSconnection.commit()
             
@@ -546,8 +542,7 @@ if __name__ == "__main__":
     crimesML = homicides_ETL.oneHotEncoder(crimesML)
     MSE, feature_importances = homicides_Pred.machineLearningETLCrimes(crimesML)
 
-    #Prediction cycle##############
-    #Months from year 2001
+    #Prediction cycle#
     crimesCount = homicides.run_query("""
     SELECT COUNT(CHI.UNIQUE_KEY) CRIMES,
     FORMAT_DATE("%B", DATE (DATETIME(CHI.DATE, "America/Chicago"))) AVAILABLE_MONTHS,
@@ -556,14 +551,14 @@ if __name__ == "__main__":
     GROUP BY FORMAT_DATE("%B", DATE (DATETIME(CHI.DATE, "America/Chicago"))), CHI.YEAR
                                       """)
 
-    homicides_Integration.monthlyUpdates(crimesCount) ####Database Table monthly Update
+    homicides_Integration.monthlyUpdates(crimesCount) #Database Table monthly Update
     
     crimesML = crimesCount[['CRIMES', 'AVAILABLE_MONTHS']]
     crimesML = homicides_ETL.oneHotEncoder(crimesML)
-    nextYear = homicides_ETL.followingYear() ####Get prediction months for coming year
+    nextYear = homicides_ETL.followingYear() #Get prediction months for coming year
     nextYearEncoded = homicides_ETL.oneHotEncoder(nextYear[['CRIMES', 'AVAILABLE_MONTHS']])    
     Prediction = homicides_Pred.machineLearningPredictionCrimes(crimesML, nextYearEncoded, nextYear)
     
-    homicides_Integration.monthlyPredictionUpdates(Prediction) ####push to production table
+    homicides_Integration.monthlyPredictionUpdates(Prediction) #push to production table
     
-    ######End of prediction cyle#########
+    #End of prediction cycle#
