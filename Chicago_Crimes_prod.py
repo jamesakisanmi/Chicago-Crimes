@@ -47,7 +47,7 @@ class Chicago_Homicides_DC():
         Write specific error to error file which is located at
         share.ad.qservco.com\metronet\Analytics\Solarwinds Servers\ErrorFile.txt on the server
     sendEmailError
-        Information needed in the header and body of error mail
+        Information needed in the header and body of error email
     handleException
         Collect specific error from error prone function and pass to writerError and sendEmailError functions
     run_query
@@ -73,7 +73,7 @@ class Chicago_Homicides_DC():
 
     @staticmethod
     def writeError(error_str, msg):
-        inFile = open(r'\\share.ad.qservco.com\metronet\Analytics\Solarwinds Servers\ErrorFile.txt', 'a') ### Need to fix
+        inFile = open(r'\\share.ad.qservco.com\metronet\Analytics\Solarwinds Servers\ErrorFile.txt', 'a')
         inFile.write('--- ' + msg + repr(error_str) + '\n\n')
         inFile.close()
 
@@ -279,7 +279,7 @@ class Chicago_Homicides_Integration():
                                     VALUES (:1, :2, :3) """
             
             self.RDScur.execute(truncatesStatement)
-            self.RDScur.executemany(monthlyUpdateStatement, crimesList)    ###Need to change to self.crimesCount or ...
+            self.RDScur.executemany(monthlyUpdateStatement, crimesList)
             
             self.RDSconnection.commit()
         
@@ -327,7 +327,7 @@ class Chicago_Homicides_Integration():
             Chicago_Statement = """insert into jakisanm.CHICAGO_CRIMES({})values({})""".format(columnNames, columnNoList)
 
             self.RDScur.execute(truncatesStatement)
-            self.RDScur.executemany(Chicago_Statement, crimesDFInsert) #####Need to fix datatype conversion
+            self.RDScur.executemany(Chicago_Statement, crimesDFInsert)
             self.RDSconnection.commit()
         
         except Exception as e:
