@@ -137,7 +137,7 @@ class Chicago_Homicides_ETL():
     def merge_dfs(self, crimesCount, crimesBG):
         try:
             crimes = pd.merge(crimesCount, crimesBG, how = 'left', on = 'GEO_ID')
-            blankColumns = {'median_age': 0, 'median_rent' : 0, 'income_per_capita': 0} ### Need to do EDA on rent and income per
+            blankColumns = {'median_age': 0, 'median_rent' : 0, 'income_per_capita': 0}
             crimes = crimes.fillna(value=blankColumns)
 
             return crimes
