@@ -1,6 +1,6 @@
 ''' This script pulls in data on crimes(homicides) in Chicago, IL from Google Big Query,
     transforms the data, makes predictions for the coming year and finally
-    pushes the results into an Oracle Database. EDA and Predictions are published
+    pushes the results into an AWS RDS (Oracle Database). EDA and Predictions are published
     and frequently updated on a Power BI Dashboard'''
 
 
@@ -249,7 +249,7 @@ class Chicago_Homicides_Prediction():
 
 class Chicago_Homicides_Integration():
     """
-    Chicago_Homicides_Integration class designed and created for inserting up-to-date data into AWS Oracle Database.
+    Chicago_Homicides_Integration class designed and created for inserting up-to-date data into AWS RDS Oracle Database.
     
     
     Methods
@@ -265,7 +265,7 @@ class Chicago_Homicides_Integration():
     """    
     
     def __init__(self):
-        """Used for connecting to AWS EC2 instance in an Oracle Database""" 
+        """Used for connecting to an Oracle Database in AWS RDS""" 
         try:
             self.RDSconnection = cx_Oracle.connect('xxxxxx', 'xxxxx', '''(DESCRIPTION =
                             (ADDRESS = (PROTOCOL = TCP)(HOST = portfolio.cy9ogmkxtqlc.us-east-2.rds.amazonaws.com)(PORT = 1521))
