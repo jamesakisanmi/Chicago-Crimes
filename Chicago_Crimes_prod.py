@@ -33,7 +33,7 @@ os.chdir(working_directory)
 
 class Chicago_Homicides_DC():
     """ 
-    Data collection using Google's big query and stored in AWS's RDS platform
+    Data collection class using Google's big query and storing in AWS's RDS platform
     
     Google’s Big Query will be the primary source for data acquisition. From which, 
     three tables will be queried to obtain the summaries of crimes, geospatial information, 
@@ -42,20 +42,20 @@ class Chicago_Homicides_DC():
     Methods
     -------
     sendErrorEmail
-        Send email to desired recipients in case any class/method fails
+        Sends email to desired recipients in case any class/method fails
     writeError
-        Write specific error to error file which is located at
+        Writes specific error to an error file which is located at
         share.ad.qservco.com\metronet\Analytics\Solarwinds Servers\ErrorFile.txt on the server
     sendEmailError
-        Information needed in the header and body of error email
+        Information needed in the header and body of the error email
     handleException
-        Collect specific error from error prone function and pass to writerError and sendEmailError functions
+        Collects specific error from error prone functions and passes to writerError and sendEmailError functions
     run_query
-        Collect data from Google's big query based on query passed into the function
+        Collects data from Google's big query based on query passed into the function
     """
     
     def __init__(self):
-        """Constructing Chicago_Homicides' variables/attributes"""
+        """Constructs Chicago_Homicides' variables/attributes"""
         try:
             self.project = "t-rider-240616"
         except Exception as e:
@@ -63,6 +63,7 @@ class Chicago_Homicides_DC():
 
     @staticmethod
     def sendErrorEmail(sender, receiver, body):
+        """Sends Error email to recipient detailing when and why the error occured"""
         server = smtplib.SMTP("smtp.gmail.com:587")
         server.ehlo()
         server.starttls()
@@ -73,12 +74,14 @@ class Chicago_Homicides_DC():
 
     @staticmethod
     def writeError(error_str, msg):
+        """Writes error on a new line in the error file. This is a backup to the error email"""
         inFile = open(r'\\share.ad.qservco.com\metronet\Analytics\Solarwinds Servers\ErrorFile.txt', 'a')
         inFile.write('--- ' + msg + repr(error_str) + '\n\n')
         inFile.close()
 
     @staticmethod
     def sendEmailError(ex, curTime, definition):
+        """Formats the error email; recipient, sender, header and body of email are specified"""
         bodyStr = "--- " + curTime + "({}) ".format(definition) + ex
         email_from = "jamesakisanmi.python@gmail.com"
         email_to = ["jamesakisanmi@gmail.com"]
@@ -90,6 +93,7 @@ class Chicago_Homicides_DC():
 
     @staticmethod
     def handleException(exception):
+        """Obtains the error message for each class/method that fails in execution"""
         # Get the current datetime
         curTime = datetime.now().strftime('%m-%d-%Y / %H:%M:%S ')
         fromDef = inspect.stack()[1][3]
@@ -100,7 +104,7 @@ class Chicago_Homicides_DC():
         Chicago_Homicides_DC.sendEmailError(repr(exception), curTime, fromDef)
 
     def run_query(self, query):
-
+        """Initializes Google Big Query's project and collects desired data based on query provided"""
         try:
             client = bigquery.Client(project = self.project)
             job = client.query(query)
@@ -122,7 +126,7 @@ class Chicago_Homicides_ETL():
     Methods
     -------
     merge_dfs
-        Function utilized for merging ACS block group data with
+        Function utilized for merging American Community Survey (ACS) block group data with
         crime(homicide) data and replacing null values 
         with Zeros
     oneHotEncoder
@@ -131,10 +135,10 @@ class Chicago_Homicides_ETL():
         Creates a placeholder dataframe which will be filled by
         Chicago_Homicides_Prediction.machineLearningPredictionCrimes function
     """
-    
-    
-    
+        
     def merge_dfs(self, crimesCount, crimesBG):
+        """Combines data from ACS with Chicago crimes data,
+        and finally cleans up the null values""" 
         try:
             crimes = pd.merge(crimesCount, crimesBG, how = 'left', on = 'GEO_ID')
             blankColumns = {'median_age': 0, 'median_rent' : 0, 'income_per_capita': 0}
@@ -146,7 +150,7 @@ class Chicago_Homicides_ETL():
             Chicago_Homicides_DC.handleException(e)
 
     def oneHotEncoder(self, crimesML):
-
+        """Creates one label encoder for each categorical column"""
         try:
                         
             categoricalFeatures = crimesML.columns[crimesML.dtypes == 'object']
@@ -163,7 +167,8 @@ class Chicago_Homicides_ETL():
             Chicago_Homicides_DC.handleException(e)
                 
     def followingYear(self):
-        
+        """Creates placeholder values in a new dataframe that will be replaced with predictions
+        for the coming year"""
         nextYear = pd.DataFrame(np.random.randint(0,10, size=(12,3)))
         nextYear.columns =  ['CRIMES', 'AVAILABLE_MONTHS', 'YEAR']
         
@@ -183,18 +188,19 @@ class Chicago_Homicides_ETL():
 class Chicago_Homicides_Prediction():
     """ 
     Chicago_Homicides_Prediction class designed and created with the purpose of training the
-    loaded dataframes from Chicago_Homicides_ETL class and providing predictions using the functions below.
+    loaded dataframes from Chicago_Homicides_ETL class and making predictions using the methods below.
     
     Methods
     -------
-    machineLearningETLCrimes
+    machineLearningEDACrimes
         Used for finding the most important independent variables which are critical for the dashboard
     machineLearningPredictionCrimes
         Used for predicting the values for the next 12 months within a reasonable prediction accuracy.
     """
     
-    def machineLearningETLCrimes(self, crimesML):
-        
+    def machineLearningEDACrimes(self, crimesML):
+        """Designed for EDA with the end goal of making the dashboard & predictions
+        as insightful and meaningful as possible"""
         try:
             
             IV = crimesML.loc[:, crimesML.columns != 'CRIMES']   
@@ -221,7 +227,7 @@ class Chicago_Homicides_Prediction():
             Chicago_Homicides_DC.handleException(e)
         
     def machineLearningPredictionCrimes(self, crimesML, nextYearEncoded, nextYear):
-    
+        """Creates Random Forest model - hyperparameter tuning already done by hand before implementation"""
         try:
             
             IV = crimesML.loc[:, crimesML.columns != 'CRIMES']   
@@ -259,7 +265,7 @@ class Chicago_Homicides_Integration():
     """    
     
     def __init__(self):
-        
+        """Used for connecting to AWS EC2 instance in an Oracle Database""" 
         try:
             self.RDSconnection = cx_Oracle.connect('xxxxxx', 'xxxxx', '''(DESCRIPTION =
                             (ADDRESS = (PROTOCOL = TCP)(HOST = portfolio.cy9ogmkxtqlc.us-east-2.rds.amazonaws.com)(PORT = 1521))
@@ -271,7 +277,7 @@ class Chicago_Homicides_Integration():
             Chicago_Homicides_DC.handleException(e)
     
     def monthlyUpdates(self, crimesCount):
-        
+        """Truncates and updates the oracle database with all crimes on a monthly basis since 2001""" 
         try:            
             crimesList = crimesCount.values.tolist()
             truncatesStatement = """delete from CHICAGO_MONTHLY_HOMICIDES"""
@@ -287,7 +293,7 @@ class Chicago_Homicides_Integration():
             Chicago_Homicides_DC.handleException(e)
     
     def monthlyPredictionUpdates(self, Prediction):
-        
+        """Predictions made by the RF model are sumbitted to the predictions table and become available for the dashboard"""
         try:            
             crimesPrediction = Prediction.values.tolist()
             truncatesStatement = """delete from CHICAGO_PREDICTION"""
@@ -304,7 +310,7 @@ class Chicago_Homicides_Integration():
             
     ###Descriptive Stats
     def DescriptiveStatsinsertRecords(self, crimesDF):
-        
+        """Truncates and updates the oracle database with all crimes and ACS data within each blockgroup since 2001""" 
         try:
                                       
             columnNames = ""
@@ -540,7 +546,7 @@ if __name__ == "__main__":
                        ]]
 
     crimesML = homicides_ETL.oneHotEncoder(crimesML)
-    MSE, feature_importances = homicides_Pred.machineLearningETLCrimes(crimesML)
+    MSE, feature_importances = homicides_Pred.machineLearningEDACrimes(crimesML)
 
     #Prediction cycle#
     crimesCount = homicides.run_query("""
