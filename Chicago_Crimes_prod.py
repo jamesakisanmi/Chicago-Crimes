@@ -75,7 +75,7 @@ class Chicago_Homicides_DC():
     @staticmethod
     def writeError(error_str, msg):
         """Writes error on a new line in the error file. This is a backup to the error email"""
-        inFile = open(r'\\share.ad.qservco.com\metronet\Analytics\Solarwinds Servers\ErrorFile.txt', 'a')
+        inFile = open(r'C:\Users\Administrator\Documents\Chicago Crimes\errorFile.txt', 'a')
         inFile.write('--- ' + msg + repr(error_str) + '\n\n')
         inFile.close()
 
