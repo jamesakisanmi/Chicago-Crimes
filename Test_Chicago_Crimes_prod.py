@@ -1,12 +1,10 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Thu Oct 31 14:34:21 2019
-
-@author: jakisanm
-"""
+__author__ = "James Akisanmi"
+__email__ = "jamesakisanmi@gmail.com"
+__title__ = "Predicting a crime could save a life – Advantage back to Chicago PD"
+__link__ = "https://app.powerbi.com/view?r=eyJrIjoiOWM2MDdjNGEtMGJjOS00YmQwLWI0ZjEtYmZkNzFjYWNhZGU0IiwidCI6IjgyYzUxNGMxLWE3MTctNDA4Ny1iZTA2LWQ0MGQyMDcwYWQ1MiIsImMiOjEwfQ%3D%3D"
+__version__ = "Python 3.7"
 
 import Chicago_Crimes_prod
-from pandas.util.testing import assert_frame_equal, assert_index_equal
 from coverage import Coverage
 import unittest
 import os
